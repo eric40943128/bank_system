@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登入 - 銀行系統</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 400px; margin: 50px auto; padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        h2 { text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
+        button { width: 100%; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        .link { text-align: center; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>用戶登入</h2>
+        <input type="text" id="username" placeholder="用戶名">
+        <input type="password" id="password" placeholder="密碼">
+        <button onclick="login()">登入</button>
+        <div class="link">
+            <a href="/register">沒有帳號？點此註冊</a>
+        </div>
+    </div>
+
+    <script>
+
+        // 取得 CSRF Token
+        function fetchCsrfToken() {
+            return fetch('/api/csrf')
+              .then(response => response.json())
+              .then(data => {
+                  csrfToken = data.csrf
+                  console.log('取得的 CSRF Token:', csrfToken)
+              })
+        }
+
+        // 先獲取 CSRF Token
+        fetchCsrfToken();
+
+        async function login() {
+            const username = document.getElementById('username').value
+            const password = document.getElementById('password').value
+
+            if (!username || !password) {
+                alert('請輸入用戶名和密碼')
+                return
+            }
+
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-csrf-token': csrfToken },
+                body: JSON.stringify({ username, password })
+            })
+            const result = await response.json()
+
+            if (result.success) {
+                window.location.href = '/dashboard'
+            } else {
+                alert(result.message)
+            }
+        }
+
+        async function checkLoginStatus() {
+            const response = await fetch('/api/check-login')
+            const result = await response.json()
+
+            if (result.success) {
+                window.location.href = '/dashboard'
+            }
+        }
+
+        window.onload = checkLoginStatus
+    </script>
+</body>
+</html>

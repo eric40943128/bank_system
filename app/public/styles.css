@@ -1,0 +1,86 @@
+/* app/public/styles.css */
+
+/* 全域設定 */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+h2 {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+/* 主要容器 */
+.container {
+    max-width: 600px;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 輸入框與按鈕 */
+input[type="text"],
+input[type="number"],
+input[type="password"],
+input[type="datetime-local"],
+button {
+    width: calc(100% - 20px);
+    padding: 8px 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+/* 按鈕樣式 */
+button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+/* 標題與區塊 */
+h3 {
+    margin: 20px 0 10px;
+    font-size: 1.25rem;
+    color: #333;
+}
+
+/* 連結 */
+a {
+    color: #4CAF50;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* 交易紀錄區塊 */
+.transaction-list {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* 調整小按鈕 */
+button.small {
+    font-size: 0.875rem;
+    padding: 5px 10px;
+}
