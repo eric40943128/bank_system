@@ -87,7 +87,6 @@
             const startDate = startDateInput.replace('T', ' ') + ':00'
             const endDate = endDateInput.replace('T', ' ') + ':00'
 
-            console.log('查詢參數:', { startDate, endDate })
 
             const response = await fetch(`/api/transactions?startDate=${startDate}&endDate=${endDate}`)
             const data = await response.json()

@@ -88,17 +88,14 @@ class TransactionService extends Service {
   // 交易紀錄查詢
   async getTransactionHistory(userId, startDate, endDate) {
     const { ctx, app } = this
-    console.log('接收到的參數:', { userId, startDate, endDate })
     let response
 
     const redisKey = `transaction_history:${userId}:${startDate}:${endDate}`
 
     const cachedTransactions = await app.redis.get(redisKey)
     if (cachedTransactions) {
-      console.log('從 Redis 快取取得交易紀錄')
       response = { success: true, transactions: JSON.parse(cachedTransactions) }
     } else {
-      console.log('從資料庫查詢交易紀錄')
       const { Op } = ctx.app.Sequelize
 
       const transactions = await ctx.model.Transaction.findAll({
