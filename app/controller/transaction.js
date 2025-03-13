@@ -18,17 +18,14 @@ class TransactionController extends Controller {
   async getTransactionHistory() {
     const { ctx } = this
     const { startDate, endDate } = ctx.query
+    let response
 
-    if (!startDate || !endDate) {
-      ctx.body = { success: false, message: '請提供查詢的開始與結束日期' }
-
-      return
+    if (startDate === ':00' || endDate === ':00') {
+      response = { success: false, message: '請提供查詢的開始與結束日期' }
+    } else {
+      response = await ctx.service.transaction.getTransactionHistory(ctx.session.user.id, startDate, endDate)
     }
-
-    console.log('接收到的參數:', { startDate, endDate })
-
-    const result = await ctx.service.transaction.getTransactionHistory(ctx.session.user.id, startDate, endDate)
-    ctx.body = result
+    ctx.body = response
   }
 }
 

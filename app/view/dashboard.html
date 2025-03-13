@@ -102,9 +102,10 @@
                     // 調整欄位名稱，確保與資料庫中的名稱對應
                     const timestamp = t.createdAt || t.createdat || '無時間'
                     const type = t.type || '無類型'
-                    const amount = t.amount || 0
+                    const amount = Math.trunc(t.amount) || 0
+                    const balance = Math.trunc(t.balance) || 0
                     
-                    li.textContent = `${timestamp} | ${type} | ${amount}`
+                    li.textContent = `${timestamp} | ${type} | ${amount} | 餘額：${balance}` 
                     list.appendChild(li)
                 })
             } else {

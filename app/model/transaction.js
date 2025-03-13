@@ -1,33 +1,25 @@
 'use strict'
 
-const { Model, DataTypes } = require('sequelize')
+module.exports = app => {
+  const { STRING, INTEGER, DECIMAL, DATE } = app.Sequelize
 
-class BankTransaction extends Model {
-  static associate(models) {
-    console.log('BankTransaction 關聯設定開始')
-    BankTransaction.belongsTo(models.User, { foreignKey: 'userId', as: 'user' })
-    console.log('BankTransaction 關聯設定完成')
+  const BankTransaction = app.model.define('BankTransaction', {
+    id: { type: INTEGER, primaryKey: true, autoIncrement: true },
+    userId: { type: INTEGER, allowNull: false },
+    amount: { type: DECIMAL(10, 2), allowNull: false },
+    balance: { type: DECIMAL(10, 2), allowNull: false, defaultValue: 0 },
+    type: { type: STRING(10), allowNull: false },
+    createdAt: { type: DATE, allowNull: false, defaultValue: app.Sequelize.literal('CURRENT_TIMESTAMP') },
+    updatedAt: { type: DATE, allowNull: false, defaultValue: app.Sequelize.literal('CURRENT_TIMESTAMP') },
+  }, {
+    tableName: 'Transactions',
+    timestamps: true,
+  })
+
+  BankTransaction.associate = () => {
+    const { User } = app.model
+    BankTransaction.belongsTo(User, { foreignKey: 'userId' })
   }
-}
-
-module.exports = sequelize => {
-  console.log('🔄 BankTransaction 模型正在初始化')
-
-  BankTransaction.init(
-    {
-      amount: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
-      type: { type: DataTypes.STRING, allowNull: false },
-      userId: { type: DataTypes.INTEGER, allowNull: false },
-    },
-    {
-      sequelize, // 使用 egg-sequelize 提供的實例
-      modelName: 'BankTransaction',
-      tableName: 'Transactions',
-      timestamps: true,
-    }
-  )
-
-  console.log('✅ BankTransaction 模型已加載，表名稱:', BankTransaction.tableName)
 
   return BankTransaction
 }

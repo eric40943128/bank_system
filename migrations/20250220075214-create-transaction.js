@@ -10,10 +10,11 @@ module.exports = {
         type: Sequelize.INTEGER,
       },
       userId: {
-        type: Sequelize.STRING,
+        type: Sequelize.INTEGER,
       },
       type: {
         type: Sequelize.STRING,
+        allowNull: false,
       },
       amount: {
         type: Sequelize.DECIMAL,

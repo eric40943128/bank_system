@@ -1,7 +1,8 @@
 'use strict'
 
 module.exports = appInfo => {
-  const config = (exports = {})
+  const config = {}
+
   const path = require('path')
 
   // Cookie 加密 key
@@ -23,6 +24,24 @@ module.exports = appInfo => {
   }
 
   /**
+   * Sequelize 設定
+   */
+  config.sequelize = {
+    dialect: 'mysql', // 使用 MySQL
+    host: '127.0.0.1',
+    port: 3306,
+    database: 'bank_system',
+    username: 'root',
+    password: 'eric910831',
+    timezone: '+08:00', // 設定時區，避免時差問題
+    define: {
+      freezeTableName: true, // 禁止 Sequelize 自動修改表名
+      timestamps: true, // 啟用 createdAt / updatedAt
+    },
+    sync: { force: false }, // **如果是 `true`，每次啟動都會刪除並重建表**
+  }
+
+  /**
    * Session 設定 (不手動指定 store)
    */
   config.session = {
@@ -32,21 +51,34 @@ module.exports = appInfo => {
     encrypt: true,
   }
 
+  /**
+   * View 設定
+   */
   config.view = {
     mapping: { '.html': 'nunjucks' },
   }
 
+  /**
+   * Security 設定
+   */
   config.security = {
     csrf: {
       enable: true,
       headerName: 'x-csrf-token', // 與前端的 Header 名稱保持一致
     },
   }
+
+  /**
+   * 靜態資源設定
+   */
   config.static = {
     prefix: '/',
     dir: path.join(appInfo.baseDir, 'app/public'),
   }
 
+  /**
+   * Cluster 設定
+   */
   config.cluster = {
     listen: {
       port: 7001,
@@ -54,7 +86,5 @@ module.exports = appInfo => {
     },
   }
 
-  return {
-    ...config,
-  }
+  return config
 }

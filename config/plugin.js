@@ -1,7 +1,7 @@
 /** @type Egg.EggPlugin */
-module.exports = {
+const plugin = {
   sequelize: {
-    enable: false,
+    enable: true,
     package: 'egg-sequelize',
   },
   redis: {
@@ -13,3 +13,5 @@ module.exports = {
     package: 'egg-view-nunjucks',
   },
 }
+
+module.exports = plugin

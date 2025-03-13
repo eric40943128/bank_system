@@ -10,15 +10,15 @@ class UserController extends Controller {
   async register() {
     const { ctx } = this
     const { username, password } = ctx.request.body
+    let response
 
     if (!username || !password) {
-      ctx.body = { success: false, message: '用戶名和密碼不能為空' }
-
-      return
+      response = { success: false, message: '用戶名和密碼不能為空' }
+    } else {
+      response = await ctx.service.user.register(username, password)
     }
 
-    const result = await ctx.service.user.register(username, password)
-    ctx.body = result
+    ctx.body = response
   }
 
   /**
@@ -27,15 +27,15 @@ class UserController extends Controller {
   async login() {
     const { ctx } = this
     const { username, password } = ctx.request.body
+    let response
 
     if (!username || !password) {
-      ctx.body = { success: false, message: '用戶名和密碼不能為空' }
-
-      return
+      response = { success: false, message: '用戶名和密碼不能為空' }
+    } else {
+      response = await ctx.service.user.login(username, password)
     }
 
-    const result = await ctx.service.user.login(username, password)
-    ctx.body = result
+    ctx.body = response
   }
 
   /**
@@ -63,14 +63,14 @@ class UserController extends Controller {
    */
   async getBalance() {
     const { ctx } = this
+    let response
 
     if (!ctx.session || !ctx.session.user) {
-      ctx.body = { success: false, message: '尚未登入，請先登入' }
-
-      return
+      response = { success: false, message: '尚未登入，請先登入' }
+    } else {
+      response = await ctx.service.user.getBalance(ctx.session.user.id)
     }
-    const result = await ctx.service.user.getBalance(ctx.session.user.id)
-    ctx.body = result
+    ctx.body = response
   }
 }
 
