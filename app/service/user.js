@@ -47,7 +47,6 @@ class UserService extends Service {
 
     let balance = await app.redis.get(redisKey)
     if (balance) {
-      console.log('從 Redis 快取取得餘額', balance)
       response = { success: true, balance: parseFloat(balance) }
     } else if (!user) {
       response = { success: false, message: '使用者不存在' }
