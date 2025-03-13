@@ -29,4 +29,5 @@ module.exports = app => {
   router.get('/api/balance', controller.user.getBalance)
   router.get('/api/transactions', controller.transaction.getTransactionHistory)
 
+  // test
 }
