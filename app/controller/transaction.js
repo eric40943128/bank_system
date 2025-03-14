@@ -1,4 +1,5 @@
 const { Controller } = require('egg')
+const moment = require('moment')
 
 class TransactionController extends Controller {
   async deposit() {
@@ -20,7 +21,10 @@ class TransactionController extends Controller {
     const { startDate, endDate } = ctx.query
     let response
 
-    if (startDate === ':00' || endDate === ':00') {
+    const isValidStartDate = moment(startDate, 'YYYY-MM-DD HH:mm:ss', true).isValid()
+    const isValidEndDate = moment(endDate, 'YYYY-MM-DD HH:mm:ss', true).isValid()
+
+    if (!isValidStartDate || !isValidEndDate) {
       response = { success: false, message: '請提供查詢的開始與結束日期' }
     } else {
       response = await ctx.service.transaction.getTransactionHistory(ctx.session.user.id, startDate, endDate)
