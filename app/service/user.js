@@ -2,13 +2,13 @@ const { Service } = require('egg')
 
 class UserService extends Service {
   async register(username, password) {
-    const existingUser = await this.ctx.model.User.findOne({ where: { username } })
     let response
+    const existingUser = await this.findUserByUsername(username)
 
     if (existingUser) {
       response = { success: false, message: '帳號已被註冊過' }
     } else {
-      await this.ctx.model.User.create({ username, password, balance: 0 })
+      await this.createUser(username, password)
       response = { success: true, message: '註冊成功' }
     }
 
@@ -16,15 +16,15 @@ class UserService extends Service {
   }
 
   async login(username, password) {
-    const user = await this.ctx.model.User.findOne({ where: { username } })
     let response
+    const user = await this.findUserByUsername(username)
 
     if (!user) {
       response = { success: false, message: '帳號不存在' }
     } else if (user.password !== password) {
       response = { success: false, message: '密碼錯誤' }
     } else {
-      this.ctx.session.user = { id: user.id, username: user.username }
+      this.setUserSession(user)
       response = { success: true, message: '登入成功', user: { id: user.id, username: user.username } }
     }
 
@@ -32,36 +32,33 @@ class UserService extends Service {
   }
 
   async logout() {
-    const { ctx } = this
-    this.ctx.session = null // 清除 Session
-    ctx.cookies.set('EGG_SESS', null, { maxAge: -1, httpOnly: true, overwrite: true }) // 強制刪除 Cookie
+    this.clearUserSession()
 
-    ctx.body = { success: true, message: '已登出' }
+    return { success: true, message: '已登出' }
   }
 
   async getBalance(userId) {
-    const { ctx, app } = this
-    const redisKey = `user_balance:${userId}`
     let response
-    const user = await ctx.model.User.findByPk(userId)
+    const balance = await this.getUserBalanceFromCache(userId)
 
-    let balance = await app.redis.get(redisKey)
-    if (balance) {
+    if (balance !== null) {
       response = { success: true, balance: parseFloat(balance) }
-    } else if (!user) {
-      response = { success: false, message: '使用者不存在' }
     } else {
-      balance = user.balance
-      await app.redis.set(redisKey, balance, 'EX', 60 * 60)
-      response = { success: true, balance: user.balance }
+      const user = await this.getUserBalanceFromDB(userId)
+      if (!user) {
+        response = { success: false, message: '使用者不存在' }
+      } else {
+        this.cacheUserBalance(userId, user.balance)
+        response = { success: true, balance: user.balance }
+      }
     }
 
     return response
   }
 
   async checkLoginStatus() {
-    const sessionUser = this.ctx.session.user
     let response
+    const sessionUser = this.ctx.session.user
 
     if (sessionUser) {
       response = { success: true, message: '已登入', user: sessionUser }
@@ -72,6 +69,41 @@ class UserService extends Service {
     return response
   }
 
+  // 透過 username 查找用戶
+  async findUserByUsername(username) {
+    return await this.ctx.model.User.findOne({ where: { username } })
+  }
+
+  // 創建新用戶
+  async createUser(username, password) {
+    await this.ctx.model.User.create({ username, password, balance: 0 })
+  }
+
+  // 設定使用者 Session
+  setUserSession(user) {
+    this.ctx.session.user = { id: user.id, username: user.username }
+  }
+
+  // 清除使用者 Session
+  clearUserSession() {
+    this.ctx.session = null
+    this.ctx.cookies.set('EGG_SESS', null, { maxAge: -1, httpOnly: true, overwrite: true })
+  }
+
+  // 從 Redis 獲取用戶餘額
+  async getUserBalanceFromCache(userId) {
+    return await this.app.redis.get(`user_balance:${userId}`)
+  }
+
+  // 從資料庫獲取用戶餘額
+  async getUserBalanceFromDB(userId) {
+    return await this.ctx.model.User.findByPk(userId)
+  }
+
+  // 快取用戶餘額至 Redis
+  async cacheUserBalance(userId, balance) {
+    await this.app.redis.set(`user_balance:${userId}`, balance, 'EX', 60 * 60)
+  }
 }
 
 module.exports = UserService
