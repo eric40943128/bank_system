@@ -46,6 +46,7 @@ class UserController extends Controller {
 
     // 呼叫 Service 處理登出邏輯
     const result = await ctx.service.user.logout()
+
     ctx.body = result
   }
 
@@ -55,6 +56,7 @@ class UserController extends Controller {
   async checkLoginStatus() {
     const { ctx } = this
     const result = await ctx.service.user.checkLoginStatus()
+
     ctx.body = result
   }
 
@@ -70,6 +72,7 @@ class UserController extends Controller {
     } else {
       response = await ctx.service.user.getBalance(ctx.session.user.id)
     }
+
     ctx.body = response
   }
 }

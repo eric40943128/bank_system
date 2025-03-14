@@ -31,12 +31,17 @@ class TransactionService extends Service {
         balance: user.balance,
       })
 
-      // **刪除交易紀錄快取**
-      const pattern = `transaction_history:${userId}:*`
-      const keys = await app.redis.keys(pattern)
-      if (keys.length > 0) {
-        await app.redis.del(...keys)
-      }
+      // 使用 `SCAN` 找到所有匹配的 `transaction_history:${userId}:*` Key，然後刪除
+      let cursor = '0'
+      do {
+        const scanResult = await app.redis.scan(cursor, 'MATCH', `transaction_history:${userId}:*`, 'COUNT', 100)
+        cursor = scanResult[0]
+        const keysToDelete = scanResult[1]
+
+        if (keysToDelete.length > 0) {
+          await app.redis.del(...keysToDelete)
+        }
+      } while (cursor !== '0') // 確保完整掃描 Redis
 
       response = { success: true, message: '存款成功', balance: user.balance }
     }
@@ -72,12 +77,17 @@ class TransactionService extends Service {
         balance: user.balance,
       })
 
-      // **刪除交易紀錄快取**
-      const pattern = `transaction_history:${userId}:*`
-      const keys = await app.redis.keys(pattern)
-      if (keys.length > 0) {
-        await app.redis.del(...keys)
-      }
+      // 使用 `SCAN` 找到所有匹配的 `transaction_history:${userId}:*` Key，然後刪除
+      let cursor = '0'
+      do {
+        const scanResult = await app.redis.scan(cursor, 'MATCH', `transaction_history:${userId}:*`, 'COUNT', 100)
+        cursor = scanResult[0]
+        const keysToDelete = scanResult[1]
+
+        if (keysToDelete.length > 0) {
+          await app.redis.del(...keysToDelete)
+        }
+      } while (cursor !== '0') // 確保完整掃描 Redis
 
       response = { success: true, message: '提款成功', balance: user.balance }
     }

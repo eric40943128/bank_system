@@ -6,6 +6,7 @@ class TransactionController extends Controller {
     const { ctx } = this
     const { amount } = ctx.request.body
     const result = await ctx.service.transaction.deposit(ctx.session.user.id, amount)
+
     ctx.body = result
   }
 
@@ -13,6 +14,7 @@ class TransactionController extends Controller {
     const { ctx } = this
     const { amount } = ctx.request.body
     const result = await ctx.service.transaction.withdraw(ctx.session.user.id, amount)
+
     ctx.body = result
   }
 
@@ -29,6 +31,7 @@ class TransactionController extends Controller {
     } else {
       response = await ctx.service.transaction.getTransactionHistory(ctx.session.user.id, startDate, endDate)
     }
+
     ctx.body = response
   }
 }
