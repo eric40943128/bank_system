@@ -14,7 +14,12 @@ class TransactionController extends Controller {
       const depositAmount = Number(amount)
       const user = await ctx.model.User.findByPk(sessionUser.id)
 
-      response = await ctx.service.transaction.deposit(user, depositAmount)
+      const validationError = ctx.service.transaction.validateAmount(user, depositAmount, 'deposit')
+      if (validationError) {
+        response = validationError
+      } else {
+        response = await ctx.service.transaction.deposit(user, depositAmount)
+      }
     }
 
     ctx.body = response
@@ -32,7 +37,12 @@ class TransactionController extends Controller {
       const withdrawAmount = Number(amount)
       const user = await ctx.model.User.findByPk(sessionUser.id)
 
-      response = await ctx.service.transaction.withdraw(user, withdrawAmount)
+      const validationError = ctx.service.transaction.validateAmount(user, withdrawAmount, 'withdraw')
+      if (validationError) {
+        response = validationError
+      } else {
+        response = await ctx.service.transaction.withdraw(user, withdrawAmount)
+      }
     }
 
     ctx.body = response
