@@ -5,35 +5,54 @@ class TransactionService extends Service {
   // 存款
   async deposit(user, amount) {
     const depositAmount = Number(amount)
-    const type = '存款'
+    const type = 'deposit'
+    let response
 
-    // 更新用戶餘額
-    await this.updateUserBalance(user, depositAmount, type)
+    // 驗證金額是否正確
+    const validationError = this.validateAmount(user, depositAmount, type)
+    if (validationError) {
+      response = validationError
+    } else {
 
-    // 儲存交易紀錄
-    await this.saveTransaction(user.id, depositAmount, user.balance, type)
+      // 更新用戶餘額
+      await this.updateUserBalance(user, depositAmount, type)
 
-    // 清除交易紀錄快取
-    await this.clearTransactionCache(user.id)
+      // 儲存交易紀錄
+      await this.saveTransaction(user.id, depositAmount, user.balance, type)
 
-    return { success: true, message: '存款成功', balance: user.balance }
+      // 清除交易紀錄快取
+      await this.clearTransactionCache(user.id)
+
+      response = { success: true, message: '存款成功', balance: user.balance }
+    }
+
+    return response
   }
 
   // 提款
   async withdraw(user, amount) {
     const withdrawAmount = Number(amount)
-    const type = '提款'
+    const type = 'withdraw'
+    let response
 
+    // 驗證金額是否正確
+    const validationError = this.validateAmount(user, withdrawAmount, type)
+    if (validationError) {
+      response = validationError
+    } else {
     // 更新用戶餘額
-    await this.updateUserBalance(user, withdrawAmount, type)
+      await this.updateUserBalance(user, withdrawAmount, type)
 
-    // 儲存交易紀錄
-    await this.saveTransaction(user.id, withdrawAmount, user.balance, type)
+      // 儲存交易紀錄
+      await this.saveTransaction(user.id, withdrawAmount, user.balance, type)
 
-    // 清除交易紀錄快取
-    await this.clearTransactionCache(user.id)
+      // 清除交易紀錄快取
+      await this.clearTransactionCache(user.id)
 
-    return { success: true, message: '提款成功', balance: user.balance }
+      response = { success: true, message: '提款成功', balance: user.balance }
+    }
+
+    return response
   }
 
   // 交易紀錄查詢
@@ -55,6 +74,19 @@ class TransactionService extends Service {
       }
 
       response = { success: true, transactions }
+    }
+
+    return response
+  }
+
+  // 驗證金額
+  validateAmount(user, amount, type) {
+    let response = null
+    if (isNaN(amount) || amount <= 0) {
+      response = { success: false, message: '存款金額無效' }
+    }
+    if (type === 'withdraw' && user.balance < amount) {
+      response = { success: false, message: '餘額不足' }
     }
 
     return response
@@ -105,9 +137,9 @@ class TransactionService extends Service {
   // 更新用戶餘額
   async updateUserBalance(user, amount, type) {
     const { app } = this
-    if (type === '存款') {
+    if (type === 'deposit') {
       user.balance = Number(user.balance) + amount
-    } else if (type === '提款') {
+    } else if (type === 'withdraw') {
       user.balance = Number(user.balance) - amount
     }
     user.updatedAt = new Date()
@@ -119,12 +151,21 @@ class TransactionService extends Service {
 
   // 儲存交易紀錄
   async saveTransaction(userId, amount, balance, type) {
-    await this.ctx.model.Transaction.create({
-      userId,
-      type,
-      amount,
-      balance,
-    })
+    if (type === 'deposit') {
+      await this.ctx.model.Transaction.create({
+        userId,
+        type: '存款',
+        amount,
+        balance,
+      })
+    } else if (type === 'withdraw') {
+      await this.ctx.model.Transaction.create({
+        userId,
+        type: '提款',
+        amount,
+        balance,
+      })
+    }
   }
 
   // 清除快取
