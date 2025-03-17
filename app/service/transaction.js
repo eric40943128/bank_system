@@ -6,53 +6,34 @@ class TransactionService extends Service {
   async deposit(user, amount) {
     const depositAmount = Number(amount)
     const type = 'deposit'
-    let response
 
-    // 驗證金額是否正確
-    const validationError = this.validateAmount(user, depositAmount, type)
-    if (validationError) {
-      response = validationError
-    } else {
+    // 更新用戶餘額
+    await this.updateUserBalance(user, depositAmount, type)
 
-      // 更新用戶餘額
-      await this.updateUserBalance(user, depositAmount, type)
+    // 儲存交易紀錄
+    await this.saveTransaction(user.id, depositAmount, user.balance, type)
 
-      // 儲存交易紀錄
-      await this.saveTransaction(user.id, depositAmount, user.balance, type)
+    // 清除交易紀錄快取
+    await this.clearTransactionCache(user.id)
 
-      // 清除交易紀錄快取
-      await this.clearTransactionCache(user.id)
-
-      response = { success: true, message: '存款成功', balance: user.balance }
-    }
-
-    return response
+    return { success: true, message: '存款成功', balance: user.balance }
   }
 
   // 提款
   async withdraw(user, amount) {
     const withdrawAmount = Number(amount)
     const type = 'withdraw'
-    let response
 
-    // 驗證金額是否正確
-    const validationError = this.validateAmount(user, withdrawAmount, type)
-    if (validationError) {
-      response = validationError
-    } else {
     // 更新用戶餘額
-      await this.updateUserBalance(user, withdrawAmount, type)
+    await this.updateUserBalance(user, withdrawAmount, type)
 
-      // 儲存交易紀錄
-      await this.saveTransaction(user.id, withdrawAmount, user.balance, type)
+    // 儲存交易紀錄
+    await this.saveTransaction(user.id, withdrawAmount, user.balance, type)
 
-      // 清除交易紀錄快取
-      await this.clearTransactionCache(user.id)
+    // 清除交易紀錄快取
+    await this.clearTransactionCache(user.id)
 
-      response = { success: true, message: '提款成功', balance: user.balance }
-    }
-
-    return response
+    return { success: true, message: '提款成功', balance: user.balance }
   }
 
   // 交易紀錄查詢
