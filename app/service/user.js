@@ -44,7 +44,7 @@ class UserService extends Service {
     if (balance !== null) {
       response = { success: true, balance: parseFloat(balance) }
     } else {
-      const user = await this.getUserBalanceFromDB(userId)
+      const user = await this.getUserInformationFromDB(userId)
       if (!user) {
         response = { success: false, message: '使用者不存在' }
       } else {
@@ -95,8 +95,8 @@ class UserService extends Service {
     return await this.app.redis.get(`user_balance:${userId}`)
   }
 
-  // 從資料庫獲取用戶餘額
-  async getUserBalanceFromDB(userId) {
+  // 從資料庫獲取用戶資訊
+  async getUserInformationFromDB(userId) {
     return await this.ctx.model.User.findByPk(userId)
   }
 
