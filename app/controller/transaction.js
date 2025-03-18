@@ -16,6 +16,7 @@ class TransactionController extends Controller {
 
       const validationError = ctx.service.transaction.validateAmount(user, depositAmount, 'deposit')
       if (validationError) {
+        ctx.status = 400
         response = validationError
       } else {
         response = await ctx.service.transaction.deposit(user, depositAmount)
@@ -39,6 +40,7 @@ class TransactionController extends Controller {
 
       const validationError = ctx.service.transaction.validateAmount(user, withdrawAmount, 'withdraw')
       if (validationError) {
+        ctx.status = 400
         response = validationError
       } else {
         response = await ctx.service.transaction.withdraw(user, withdrawAmount)
