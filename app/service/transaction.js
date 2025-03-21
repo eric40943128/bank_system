@@ -62,7 +62,7 @@ class TransactionService extends Service {
 
   // 驗證金額
   validateAmount(user, amount, type) {
-    let response = null
+    let response = { success: true }
     if (type === 'withdraw' && user.balance < amount) {
       response = { success: false, message: '餘額不足' }
     }
