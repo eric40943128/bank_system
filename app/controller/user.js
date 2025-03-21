@@ -13,6 +13,7 @@ class UserController extends Controller {
     let response
 
     if (!username || !password) {
+      ctx.status = 400
       response = { success: false, message: '用戶名和密碼不能為空' }
     } else {
       response = await ctx.service.user.register(username, password)
@@ -30,9 +31,14 @@ class UserController extends Controller {
     let response
 
     if (!username || !password) {
+      ctx.status = 400
       response = { success: false, message: '用戶名和密碼不能為空' }
     } else {
       response = await ctx.service.user.login(username, password)
+
+      if (!response.success) {
+        ctx.status = 401
+      }
     }
 
     ctx.body = response
@@ -71,6 +77,7 @@ class UserController extends Controller {
       response = { success: false, message: '尚未登入，請先登入' }
     } else {
       response = await ctx.service.user.getBalance(ctx.session.user.id)
+      response.balance = Number(response.balance)
     }
 
     ctx.body = response
