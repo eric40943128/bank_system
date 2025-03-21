@@ -8,6 +8,7 @@
     "declarations": true
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "egg": "^3.17.5",
     "egg-redis": "^2.6.1",
     "egg-scripts": "2",
@@ -21,7 +22,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "egg-bin": "6",
-    "egg-mock": "^5.15.1",
+    "egg-mock": "5",
     "eslint": "^8.57.0",
     "eslint-config-egg": "^14.0.0",
     "sequelize-cli": "^6.6.2"
@@ -33,15 +34,16 @@
     "start": "egg-scripts start --daemon --title=egg-server-bank",
     "stop": "egg-scripts stop --title=egg-server-bank",
     "dev": "egg-bin dev",
-    "test": "egg-bin test",
+    "test": "npm run lint -- --fix && npm run test:local",
     "test:local": "egg-bin test",
     "cov": "egg-bin cov",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "ci": "npm run lint && npm run cov"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/eric40943128/bank_system.git"
+    "url": ""
   },
   "author": "",
   "license": "MIT"

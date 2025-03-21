@@ -63,11 +63,11 @@ class TransactionService extends Service {
   // 驗證金額
   validateAmount(user, amount, type) {
     let response = null
-    if (type === 'withdraw' && user.balance < amount) {
-      response = { success: false, message: '餘額不足' }
-    }
     if (isNaN(amount) || amount <= 0) {
       response = { success: false, message: '存款金額無效' }
+    }
+    if (type === 'withdraw' && user.balance < amount) {
+      response = { success: false, message: '餘額不足' }
     }
 
     return response
