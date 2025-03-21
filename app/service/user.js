@@ -39,18 +39,16 @@ class UserService extends Service {
 
   async getBalance(userId) {
     let response
-    const balance = await this.getUserBalanceFromCache(userId)
+    const user = await this.getUserInformationFromDB(userId)
 
+
+    const balance = await this.getUserBalanceFromCache(userId)
     if (balance !== null) {
       response = { success: true, balance: parseFloat(balance) }
     } else {
-      const user = await this.getUserInformationFromDB(userId)
-      if (!user) {
-        response = { success: false, message: '使用者不存在' }
-      } else {
-        this.cacheUserBalance(userId, user.balance)
-        response = { success: true, balance: user.balance }
-      }
+      this.cacheUserBalance(userId, user.balance)
+      response = { success: true, balance: user.balance }
+
     }
 
     return response

@@ -16,6 +16,7 @@ class TransactionController extends Controller {
 
       const validationError = ctx.service.transaction.validateAmount(user, depositAmount, 'deposit')
       if (validationError) {
+        ctx.status = 400
         response = validationError
       } else {
         response = await ctx.service.transaction.deposit(user, depositAmount)
@@ -39,6 +40,7 @@ class TransactionController extends Controller {
 
       const validationError = ctx.service.transaction.validateAmount(user, withdrawAmount, 'withdraw')
       if (validationError) {
+        ctx.status = 400
         response = validationError
       } else {
         response = await ctx.service.transaction.withdraw(user, withdrawAmount)
@@ -57,6 +59,7 @@ class TransactionController extends Controller {
     const isValidEndDate = moment(endDate, 'YYYY-MM-DD HH:mm:ss', true).isValid()
 
     if (!isValidStartDate || !isValidEndDate) {
+      ctx.status = 400
       response = { success: false, message: '請提供查詢的開始與結束日期' }
     } else {
       response = await ctx.service.transaction.getTransactionHistory(ctx.session.user.id, startDate, endDate)

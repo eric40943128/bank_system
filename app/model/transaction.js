@@ -1,7 +1,7 @@
 'use strict'
 
 module.exports = app => {
-  const { STRING, INTEGER, DECIMAL, DATE } = app.Sequelize
+  const { STRING, INTEGER, DECIMAL } = app.Sequelize
 
   const BankTransaction = app.model.define('BankTransaction', {
     id: { type: INTEGER, primaryKey: true, autoIncrement: true },
@@ -9,8 +9,6 @@ module.exports = app => {
     amount: { type: DECIMAL(10, 2), allowNull: false },
     balance: { type: DECIMAL(10, 2), allowNull: false, defaultValue: 0 },
     type: { type: STRING(10), allowNull: false },
-    createdAt: { type: DATE, allowNull: false, defaultValue: app.Sequelize.literal('CURRENT_TIMESTAMP') },
-    updatedAt: { type: DATE, allowNull: false, defaultValue: app.Sequelize.literal('CURRENT_TIMESTAMP') },
   }, {
     tableName: 'Transactions',
     timestamps: true,
