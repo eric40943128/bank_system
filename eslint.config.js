@@ -15,8 +15,6 @@ module.exports = [
       ecmaVersion: 'latest',
       sourceType: 'script',
       globals: {
-        window: 'readonly',
-        document: 'readonly',
         console: 'readonly',
       },
     },

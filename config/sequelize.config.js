@@ -10,7 +10,6 @@ module.exports = {
     logging: console.log,
     dialectOptions: {
       dateStrings: true,
-      typeCast: true,
       timezone: '+08:00', // 確保 MySQL 取出時間時也是台北時間
     },
   },
