@@ -19,6 +19,9 @@ module.exports = {
       amount: {
         type: Sequelize.DECIMAL,
       },
+      balance: {
+        type: Sequelize.DECIMAL,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

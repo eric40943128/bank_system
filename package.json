@@ -8,6 +8,7 @@
     "declarations": true
   },
   "dependencies": {
+    "decimal.js": "^10.5.0",
     "egg": "^3.17.5",
     "egg-redis": "^2.6.1",
     "egg-scripts": "2",

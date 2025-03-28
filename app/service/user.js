@@ -40,12 +40,13 @@ class UserService extends Service {
   async getBalance(userId) {
     let response
 
-    const balance = await this.getUserBalanceFromCache(userId)
+    let balance = await this.getUserBalanceFromCache(userId)
     if (balance !== null) {
-      response = { success: true, balance: Number(balance) }
+      balance = Number(balance)
+      response = { success: true, balance: (balance / 100).toFixed(2) }
     } else {
       const user = await this.getUserInformationFromDB(userId)
-      this.cacheUserBalance(userId, user.balance)
+      this.cacheUserBalance(userId, user.balance, user.lastOpId)
       response = { success: true, balance: Number(user.balance) }
     }
 
@@ -86,9 +87,9 @@ class UserService extends Service {
     this.ctx.cookies.set('EGG_SESS', null, { maxAge: -1, httpOnly: true, overwrite: true })
   }
 
-  // 從 Redis 獲取用戶餘額
+  // 從 Redis Hash 結構獲取用戶餘額
   async getUserBalanceFromCache(userId) {
-    return await this.app.redis.get(`user_balance:${userId}`)
+    return await this.app.redis.hget(`user_key:${userId}`, 'balance_cents')
   }
 
   // 從資料庫獲取用戶資訊
@@ -96,9 +97,16 @@ class UserService extends Service {
     return await this.ctx.model.User.findByPk(userId)
   }
 
-  // 快取用戶餘額至 Redis
-  async cacheUserBalance(userId, balance) {
-    await this.app.redis.set(`user_balance:${userId}`, balance, 'EX', 60 * 60)
+  // 快取用戶餘額至 Redis Hash 結構
+  async cacheUserBalance(userId, balance, opId) {
+    const redis = this.app.redis
+    balance = Number(balance * 100)
+    await redis
+      .multi()
+      .hset(`user_key:${userId}`, 'balance_cents', balance)
+      .hset(`user_key:${userId}`, 'opId', opId)
+      .expire(`user_key:${userId}`, 60 * 60)
+      .exec()
   }
 }
 
