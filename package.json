@@ -8,6 +8,7 @@
     "declarations": true
   },
   "dependencies": {
+    "bull": "^4.16.5",
     "egg": "^3.17.5",
     "egg-redis": "^2.6.1",
     "egg-scripts": "2",

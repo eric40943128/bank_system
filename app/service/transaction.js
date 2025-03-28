@@ -1,5 +1,7 @@
 'use strict'
 const { Service } = require('egg')
+const { updateUserBalanceQueue } = require('../lib/queue')
+
 
 class TransactionService extends Service {
   // 存款
@@ -7,11 +9,8 @@ class TransactionService extends Service {
     const depositAmount = Number(amount)
     const type = 'deposit'
 
-    // 更新用戶餘額
-    await this.updateUserBalance(user, depositAmount, type)
-
-    // 儲存交易紀錄
-    await this.saveTransaction(user.id, depositAmount, user.balance, type)
+    // 儲存此次交易並更新用戶餘額
+    await this.processTransaction(user, depositAmount, type)
 
     // 清除交易紀錄快取
     await this.clearTransactionCache(user.id)
@@ -24,11 +23,8 @@ class TransactionService extends Service {
     const withdrawAmount = Number(amount)
     const type = 'withdraw'
 
-    // 更新用戶餘額
-    await this.updateUserBalance(user, withdrawAmount, type)
-
-    // 儲存交易紀錄
-    await this.saveTransaction(user.id, withdrawAmount, user.balance, type)
+    // 儲存此次交易並更新用戶餘額
+    await this.processTransaction(user, withdrawAmount, type)
 
     // 清除交易紀錄快取
     await this.clearTransactionCache(user.id)
@@ -115,38 +111,20 @@ class TransactionService extends Service {
     await app.redis.set(redisKey, JSON.stringify(transactions), 'EX', 60 * 60) // 快取 1 小時
   }
 
-  // 更新用戶餘額
-  async updateUserBalance(user, amount, type) {
-    const { app } = this
-    if (type === 'deposit') {
-      user.balance = Number(user.balance) + amount
-    } else if (type === 'withdraw') {
-      user.balance = Number(user.balance) - amount
-    }
-    user.updatedAt = new Date()
-    await user.save()
+  // 儲存此次交易並更新用戶餘額
+  async processTransaction(user, amount, type) {
 
-    const redisKey = `user_balance:${user.id}`
-    await app.redis.set(redisKey, user.balance, 'EX', 60 * 60)
-  }
+    await updateUserBalanceQueue.add({
+      userId: user.id,
+      amount,
+      type,
+    }, {
+      attempts: 3,
+      backoff: 1000, // 每次失敗後延遲再試（ms）
+      removeOnComplete: true,
+      removeOnFail: true,
+    })
 
-  // 儲存交易紀錄
-  async saveTransaction(userId, amount, balance, type) {
-    if (type === 'deposit') {
-      await this.ctx.model.Transaction.create({
-        userId,
-        type: '存款',
-        amount,
-        balance,
-      })
-    } else if (type === 'withdraw') {
-      await this.ctx.model.Transaction.create({
-        userId,
-        type: '提款',
-        amount,
-        balance,
-      })
-    }
   }
 
   // 清除快取
