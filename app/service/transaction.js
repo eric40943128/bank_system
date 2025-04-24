@@ -1,39 +1,39 @@
 'use strict'
 const { Service } = require('egg')
+const fs = require('fs')
+const path = require('path')
+const Decimal = require('decimal.js')
+
+const LUA_UPDATE_SCRIPT = fs.readFileSync(
+  path.resolve(__dirname, '../redis-scripts/update_balance.lua'),
+  'utf8'
+)
 
 class TransactionService extends Service {
   // 存款
   async deposit(user, amount) {
-    const depositAmount = Number(amount)
     const type = 'deposit'
 
-    // 更新用戶餘額
-    await this.updateUserBalance(user, depositAmount, type)
-
-    // 儲存交易紀錄
-    await this.saveTransaction(user.id, depositAmount, user.balance, type)
+    // 更新用戶餘額並加入交易紀錄佇列
+    const balance = await this.processTransaction(user.id, amount, type)
 
     // 清除交易紀錄快取
     await this.clearTransactionCache(user.id)
 
-    return { success: true, message: '存款成功', balance: user.balance }
+    return { success: true, message: '存款成功', balance }
   }
 
   // 提款
   async withdraw(user, amount) {
-    const withdrawAmount = Number(amount)
     const type = 'withdraw'
 
-    // 更新用戶餘額
-    await this.updateUserBalance(user, withdrawAmount, type)
-
-    // 儲存交易紀錄
-    await this.saveTransaction(user.id, withdrawAmount, user.balance, type)
+    // 更新用戶餘額並加入交易紀錄佇列
+    const balance = await this.processTransaction(user.id, amount, type)
 
     // 清除交易紀錄快取
     await this.clearTransactionCache(user.id)
 
-    return { success: true, message: '提款成功', balance: user.balance }
+    return { success: true, message: '提款成功', balance }
   }
 
   // 交易紀錄查詢
@@ -63,11 +63,14 @@ class TransactionService extends Service {
   // 驗證金額
   validateAmount(user, amount, type) {
     let response = { success: true }
-    if (type === 'withdraw' && user.balance < amount) {
-      response = { success: false, message: '餘額不足' }
-    }
     if (isNaN(amount) || amount <= 0) {
       response = { success: false, message: '存款金額無效' }
+    }
+    if (!Number.isInteger(amount * 100)) {
+      return { success: false, message: '金額最多只能輸入到小數點後兩位' }
+    }
+    if (type === 'withdraw' && user.balance < amount) {
+      response = { success: false, message: '餘額不足' }
     }
 
     return response
@@ -115,37 +118,55 @@ class TransactionService extends Service {
     await app.redis.set(redisKey, JSON.stringify(transactions), 'EX', 60 * 60) // 快取 1 小時
   }
 
-  // 更新用戶餘額
-  async updateUserBalance(user, amount, type) {
-    const { app } = this
-    if (type === 'deposit') {
-      user.balance = Number(user.balance) + amount
-    } else if (type === 'withdraw') {
-      user.balance = Number(user.balance) - amount
-    }
-    user.updatedAt = new Date()
-    await user.save()
+  // 更新用戶餘額並加入交易紀錄佇列
+  async processTransaction(userId, amount, type) {
+    const { ctx } = this
 
-    const redisKey = `user_balance:${user.id}`
-    await app.redis.set(redisKey, user.balance, 'EX', 60 * 60)
+    // 將浮點數轉為整數準備進行操作
+    const transactionAmount = await this.convertAmountToInteger(type === 'deposit' ? amount : -amount)
+    const redisKey = `user_key:${userId}`
+
+    // 使用 Lua 腳本執行 balance + opId 的原子操作
+    let [ balance, opId ] = await ctx.app.redis.eval(
+      LUA_UPDATE_SCRIPT,
+      1,
+      redisKey,
+      transactionAmount
+    )
+
+    if (balance === -1) {
+      throw new Error('餘額不足')
+    }
+
+    // 將操作後的金額轉回浮點數做後續處理
+    balance = new Decimal(balance).div(100)
+
+    // 將同步任務加入 Redis List（使用 JSON 格式）
+    await ctx.app.redis.rpush('balance_sync_list', JSON.stringify({
+      id: userId,
+      balance,
+      opId,
+    }))
+
+    // 將交易紀錄寫入加入 Redis List
+    await ctx.app.redis.rpush('transaction_list', JSON.stringify({
+      userId,
+      amount,
+      type: type === 'deposit' ? '存款' : '提款',
+      balance,
+    }))
+
+    return balance
   }
 
-  // 儲存交易紀錄
-  async saveTransaction(userId, amount, balance, type) {
-    if (type === 'deposit') {
-      await this.ctx.model.Transaction.create({
-        userId,
-        type: '存款',
-        amount,
-        balance,
-      })
-    } else if (type === 'withdraw') {
-      await this.ctx.model.Transaction.create({
-        userId,
-        type: '提款',
-        amount,
-        balance,
-      })
+  // 把即將處理的操作金額轉為整數（為搭配incrby）
+  async convertAmountToInteger(amount) {
+    try {
+      const decimalAmount = new Decimal(amount)
+
+      return decimalAmount.mul(100).toNumber()
+    } catch (err) {
+      throw new Error(`Invalid amount format: ${amount}`)
     }
   }
 

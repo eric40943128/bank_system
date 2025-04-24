@@ -39,6 +39,12 @@ module.exports = appInfo => {
       timestamps: true, // 啟用 createdAt / updatedAt
     },
     sync: { force: false }, // **如果是 `true`，每次啟動都會刪除並重建表**
+    pool: {
+      max: 50, // 最大連線數，可根據硬體資源調整
+      min: 0, // 最小連線數
+      acquire: 30000, // 連線最大等待時間（毫秒）
+      idle: 10000, // 連線空閒最大時間（毫秒）
+    },
   }
 
   /**
@@ -63,7 +69,7 @@ module.exports = appInfo => {
    */
   config.security = {
     csrf: {
-      enable: true,
+      enable: false,
       headerName: 'x-csrf-token', // 與前端的 Header 名稱保持一致
     },
   }
